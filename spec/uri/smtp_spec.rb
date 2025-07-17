@@ -1,11 +1,7 @@
 # frozen_string_literal: true
 
-RSpec.describe Uri::Smtp do
+RSpec.describe URI::SMTP do
   it "has a version number" do
-    expect(Uri::Smtp::VERSION).not_to be nil
-  end
-
-  it "does something useful" do
-    expect(false).to eq(true)
+    expect(URI::SMTP::VERSION).not_to be nil
   end
 end

@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require "uri"
 require_relative "smtp/version"
 
-module Uri
-  module Smtp
+module URI
+  class SMTP < URI::Generic
     class Error < StandardError; end
-    # Your code goes here...
   end
+
+  register_scheme "SMTP", SMTP
+  register_scheme "SMTPS", SMTP
 end
