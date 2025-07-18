@@ -33,6 +33,10 @@ module URI
       "plain"
     end
 
+    def domain
+      parsed_query["domain"]
+    end
+
     def scheme_auth
       scheme[/.*(?:\+(.+))/, 1]
     end
@@ -76,22 +80,30 @@ module URI
         {
           address: host,
           authentication: auth,
+          domain:,
           enable_starttls: starttls,
-          password: decoded_password,
-          port:,
-          user_name: decoded_user
-        }
+          port:
+        }.tap do
+          unless _1[:authentication].nil?
+            _1[:user_name] = decoded_user
+            _1[:password] = decoded_password
+          end
+        end.delete_if { |_k, v| v.nil? }
       else
         {
           auth:,
+          domain:,
           host:,
-          password: decoded_password,
           port:,
           scheme:,
           starttls:,
-          tls:,
-          user: decoded_user
-        }
+          tls:
+        }.tap do
+          unless _1[:auth].nil?
+            _1[:user] = decoded_user
+            _1[:password] = decoded_password
+          end
+        end.delete_if { |_k, v| v.nil? }
       end
     end
 

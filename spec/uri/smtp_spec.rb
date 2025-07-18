@@ -112,6 +112,10 @@ RSpec.describe URI::SMTP do
         specify do
           expect(parse(uri).to_h).to include(includes)
         end
+
+        specify do
+          expect(parse(uri).to_h.values).to_not include(nil)
+        end
       end
     end
     [
@@ -139,6 +143,10 @@ RSpec.describe URI::SMTP do
       })
     ].each do |*args|
       include_examples "hash of uri", *args
+    end
+
+    it "doesn't include userinfo when no auth" do
+      expect(parse("smtp+none://u:p@foo").to_h).to_not include(:user, :password)
     end
   end
 end
