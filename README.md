@@ -1,6 +1,6 @@
 # URI::SMTP
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/uri/smtp`. To experiment with that code, run `bin/console` for an interactive prompt.
+This library allows for parsing SMTP-URIs.
 
 ## Installation
 
@@ -18,6 +18,120 @@ gem install uri-smtp
 
 ## Usage
 
+### parse
+
+```ruby
+u = URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org")
+
+url.scheme           #=> "smtps+login"
+url.auth             #=> "login"
+url.starttls         #=> false
+url.tls?             #=> true
+url.userinfo         #=> "user%40gmail.com:p%40ss"
+url.decoded_user     #=> "user@gmail.com"
+url.user             #=> "user%40gmail.com"
+url.decoded_password #=> "p@ss"
+url.password         #=> "p%40ss"
+url.host             #=> "smtp.gmail.com"
+url.port             #=> 465
+url.domain           #=> s"ender.org"
+url.query            #=> "domain=sender.org"
+```
+
+### to_h
+
+```ruby
+URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to_h
+{auth: "login",
+ domain: "sender.org",
+ host: "smtp.gmail.com",
+ port: 587,
+ scheme: "smtps+login",
+ starttls: :always,
+ tls: false,
+ user: "user@gmail.com",
+ password: "p@ss"}
+```
+
+Formatting for action_mailer configuration, use `to_h(format: :am)`:
+```ruby
+URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to_h(format: :am)
+{address: "smtp.gmail.com",
+ authentication: "login",
+ domain: "sender.org",
+ enable_starttls: :always,
+ port: 587,
+ user_name: "user@gmail.com",
+ password: "p@ss"}
+```
+
+
+Full Rails config:
+```ruby
+    config.action_mailer.delivery_method = :smtp
+    # [mailcatcher](https://github.com/sj26/mailcatcher) fallback:
+    config.action_mailer.smtp_settings = URI(ENV.fetch("SMTP_URL", "smtp://127.0.0.1:1025")).to_h(format: :am)
+```
+
+## SMTP-URI
+
+There's no official specification for SMTP-URIs. There's some prior work though. This implementation is heavily inspired by [aerc](https://git.sr.ht/~rjarry/aerc/tree/master/item/doc/aerc-smtp.5.scd).  
+
+`<scheme>[+<auth>]://[<user>[:<password>]@]<host>[:<port>][?<query>][#<fragment>]`
+
+### scheme
+
+- `smtp`  
+  SMTP with STARTTLS (i.e. `url.starttls #=> :always`).
+- `smtp+insecure`  
+  SMTP without STARTTLS (i.e. `url.starttls #=> false`)..
+- `smtps`  
+  SMTP with TLS.
+
+> [!NOTE]
+> to get `url.starttls #=> :auto`, provide it in the query: `smtp://foo?auth=auto`. In that case `net-smtp` uses STARTTLS when the server supports it (but won't halt like when using `:always`).
+
+
+### auth
+
+There's no restriction to the value of auth. Though the following values have special meaning:
+
+- `none`  
+  No authentication is required.
+- `plain`  
+  Authenticate with a username and password using AUTH PLAIN. This is the default behavior.
+
+> [!NOTE]
+> any query's value for `auth` takes precedence.
+
+### Examples
+
+| SMTP URI | TLS? | Port | STARTTLS | Auth Method | Notes |
+|----------|---------|------|----------|-------------|-------|
+| `smtp://smtp.example.com` | ❌ | 587 | ⚡ | none | Standard submission with STARTTLS `:always` |
+| `smtp+insecure://smtp.example.com` | ❌ | 587 | ❌ | none | Standard submission without STARTTLS |
+| `smtp+insecure+login://user:pass@smtp.example.com` | ❌ | 587 | ❌ | login | Authenticate insecurely using LOGIN auth |
+| `smtp://smtp.example.com?starttls=auto` | ❌ | 587 | 🔄 | none | Standard submission with STARTTLS `:auto` |
+| `smtp://smtp.example.com:1025` | ❌ | 1025 | ⚡ | none | Standard submission with STARTTLS `:always` on custom port |
+| `smtp://user:pass@mail.example.com` | ❌ | 587 | ⚡ | plain | STARTTLS `:always` with (default) PLAIN auth |
+| `smtp+login://user:pass@mail.example.com` | ❌ | 587 | ⚡ | login | STARTTLS `:always` with LOGIN auth |
+| `smtp+none://mail.example.com` | ❌ | 587 | 🔄 | none | Explicit no authentication |
+| `smtps://mail.example.com` | ✅ | 465 | ❌ | none | Direct TLS connection |
+| `smtps://mail.example.com?domain=sender.org&read_timeout=5&open_timeout=5` | ✅ | 465 | ❌ | none | `domain`, `read_timeout` and `open_timeout` set |
+| `smtps+login://user@imap.gmail.com` | ✅ | 465 | ❌ | login | Direct TLS with LOGIN auth |
+| `smtps://user%40gmail.com:p%40ss@imap.gmail.com` | ✅ | 465 | ❌ | login | Direct TLS with encoded userinfo `user@gmail.com:p@ss` |
+| `smtp://localhost` | ❌ | 25 | ❌ | none | Local delivery (no encryption) |
+| `smtp://127.0.0.1` | ❌ | 25 | ❌ | none | Local delivery (no encryption) |
+
+**Legend**
+
+`STARTTLS`
+- ⚡ = `:always`  
+  Require STARTTLS (i.e. `net-smtp` aborts when server doesn't support STARTTLS).
+- 🔄 = `:auto`  
+  Use STARTTLS if supported by server.
+- ❌ = `false`  
+  No STARTTLS. This is always the case when using TLS.
 
 ## Development
 
