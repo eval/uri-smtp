@@ -81,13 +81,23 @@ module URI
           address: host,
           authentication: auth,
           domain:,
-          enable_starttls: starttls,
-          port:
+          enable_starttls: starttls == :always,
+          enable_starttls_auto: starttls == :auto,
+          port:,
+          tls:
         }.tap do
           unless _1[:authentication].nil?
             _1[:user_name] = decoded_user
             _1[:password] = decoded_password
           end
+          # mail 2.8.1 logic is faulty in that it shortcuts
+          # (start)tls-settings when they are false.
+          # So we delete these flags.
+          _1.delete(:tls) unless _1[:tls]
+          _1.delete(:enable_starttls) unless _1[:enable_starttls]
+          _1.delete(:enable_starttls) if _1[:tls]
+          _1.delete(:enable_starttls_auto) unless _1[:enable_starttls_auto]
+          _1.delete(:enable_starttls_auto) if _1[:tls]
         end.delete_if { |_k, v| v.nil? }
       else
         {

@@ -107,46 +107,94 @@ RSpec.describe URI::SMTP do
   end
 
   describe "#to_h" do
-    shared_examples "hash of uri" do |uri, includes, meta|
-      describe uri.inspect, meta.inspect do
-        specify do
-          expect(parse(uri).to_h).to include(includes)
-        end
+    describe "format: default" do
+      shared_examples "hash of uri" do |uri, includes, meta|
+        describe uri.inspect, meta.inspect do
+          specify do
+            expect(parse(uri).to_h).to include(includes)
+          end
 
-        specify do
-          expect(parse(uri).to_h.values).to_not include(nil)
+          specify do
+            expect(parse(uri).to_h.values).to_not include(nil)
+          end
         end
       end
-    end
-    [
-      # decoded userinfo
-      sample("smtps://user%40gmail.com:pass%2F@foo", {
-        user: "user@gmail.com",
-        password: "pass/"
-      }),
 
-      # local defaults
-      sample("smtp://localhost", {
-        port: 25,
-        starttls: false,
-        tls: false
-      }),
-      sample("smtps://foo", {
-        port: 465,
-        starttls: false,
-        tls: true
-      }),
-      sample("smtp://foo", {
-        port: 587,
-        starttls: :always,
-        tls: false
-      })
-    ].each do |*args|
-      include_examples "hash of uri", *args
-    end
+      [
+        # decoded userinfo
+        sample("smtps://user%40gmail.com:pass%2F@foo", {
+          user: "user@gmail.com",
+          password: "pass/"
+        }),
 
-    it "doesn't include userinfo when no auth" do
-      expect(parse("smtp+none://u:p@foo").to_h).to_not include(:user, :password)
+        # local defaults
+        sample("smtp://localhost", {
+          port: 25,
+          starttls: false,
+          tls: false
+        }),
+        sample("smtps://foo", {
+          port: 465,
+          starttls: false,
+          tls: true
+        }),
+        sample("smtp://foo", {
+          port: 587,
+          starttls: :always,
+          tls: false
+        })
+      ].each do |*args|
+        include_examples "hash of uri", *args
+      end
+
+      it "doesn't include userinfo when no auth" do
+        expect(parse("smtp+none://u:p@foo").to_h).to_not include(:user, :password)
+      end
+    end
+    describe "format: :action_mailer" do
+      shared_examples "hash of uri for action_mailer" do |uri, includes, meta|
+        describe uri.inspect, meta.inspect do
+          excluded_keys = includes.delete(:__excluding)
+          specify do
+            expect(parse(uri).to_h(format: :am)).to include(includes)
+          end
+          if excluded_keys&.any?
+            specify do
+              expect(parse(uri).to_h(format: :am).keys).to_not include(excluded_keys)
+            end
+          end
+
+          specify do
+            expect(parse(uri).to_h.values).to_not include(nil)
+          end
+        end
+      end
+
+      [
+        # decoded userinfo with correct key
+        sample("smtps://user%40gmail.com:pass%2F@foo", {
+          user_name: "user@gmail.com",
+          password: "pass/"
+        }),
+
+        # local defaults
+        sample("smtp://localhost", {
+          port: 25,
+          __excluding: %i[tls enable_starttls enable_starttls_auto]
+        }),
+        sample("smtps://foo", {
+          port: 465,
+          tls: true,
+          __excluding: %i[enable_starttls enable_starttls_auto]
+        }),
+        sample("smtp://foo", {
+          port: 587,
+          enable_starttls: true,
+          __excluding: %i[tls enable_starttls_auto]
+        })
+      ].each do |*args|
+        include_examples "hash of uri for action_mailer", *args
+      end
     end
   end
 end
