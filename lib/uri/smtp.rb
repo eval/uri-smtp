@@ -118,7 +118,7 @@ end
 
 module UriSmtpExtensions
   def parse(uri)
-    if uri.start_with?("smtp")
+    if uri.is_a?(String) && uri.start_with?("smtp")
       return URI::SMTP.parse(uri)
     end
 
