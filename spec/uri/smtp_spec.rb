@@ -118,7 +118,8 @@ RSpec.describe URI::SMTP do
     [
       # string
       sample("smtp://foo.org", :string, nil),
-      sample("smtp://token@foo.org", :string, "token"),
+      sample("smtp://token@foo.org", :string, "token:"),
+      sample("smtp://user:token@foo.org", :string, "user:token"),
       sample("smtp://user%40gmail.com:pass%2F@foo.org", :string, "user@gmail.com:pass/"),
 
       # array
