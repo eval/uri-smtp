@@ -75,6 +75,14 @@ module URI
       parsed_query["domain"] || fragment
     end
 
+    def read_timeout
+      parsed_query["read_timeout"]
+    end
+
+    def open_timeout
+      parsed_query["open_timeout"]
+    end
+
     def starttls
       return false if tls?
       return parsed_query["starttls"] if parsed_query.has_key?("starttls")
@@ -99,14 +107,18 @@ module URI
     end
 
     def parsed_query
-      @parsed_query ||= URI.decode_www_form(query.to_s).to_h.tap do
-        _1["starttls"] &&= case _1["starttls"]
-        when "always", "auto" then _1["starttls"].to_sym
-        when "false" then false
-        else
-          :always
+      @parsed_query ||= URI.decode_www_form(query.to_s).to_h
+        .delete_if { |_k, v| !string_presence(v) }
+        .tap do
+          _1["read_timeout"] &&= _1["read_timeout"].to_i
+          _1["open_timeout"] &&= _1["open_timeout"].to_i
+          _1["starttls"] &&= case _1["starttls"]
+          when "always", "auto" then _1["starttls"].to_sym
+          when "false" then false
+          else
+            :always
+          end
         end
-      end
     end
 
     def to_h(format: nil)
@@ -118,7 +130,9 @@ module URI
           domain:,
           enable_starttls: starttls == :always,
           enable_starttls_auto: starttls == :auto,
+          open_timeout:,
           port:,
+          read_timeout:,
           tls:
         }.tap do
           unless _1[:authentication].nil?
@@ -139,7 +153,9 @@ module URI
           auth:,
           domain:,
           host:,
+          open_timeout:,
           port:,
+          read_timeout:,
           scheme:,
           starttls:,
           tls:

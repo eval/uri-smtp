@@ -231,6 +231,14 @@ RSpec.describe URI::SMTP do
           port: 587,
           enable_starttls: true,
           __excluding: %i[tls enable_starttls_auto]
+        }),
+        # timeout settings
+        sample("smtp://foo?read_timeout=&open_timeout=", {
+          __excluding: %i[read_timeout open_timeout]
+        }),
+        sample("smtp://foo?read_timeout=1&open_timeout=2", {
+          read_timeout: 1,
+          open_timeout: 2
         })
       ].each do |*args|
         include_examples "hash of uri for action_mailer", *args
