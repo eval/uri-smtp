@@ -37,10 +37,6 @@ module URI
       parsed_query["domain"]
     end
 
-    def scheme_auth
-      scheme[/.*(?:\+(.+))/, 1]
-    end
-
     def starttls
       return false if tls?
       return parsed_query["starttls"] if parsed_query.has_key?("starttls")
@@ -51,7 +47,7 @@ module URI
     alias_method :starttls?, :starttls
 
     def tls
-      scheme == "smtps"
+      !!scheme[/^smtps/]
     end
     alias_method :tls?, :tls
 
@@ -119,6 +115,12 @@ module URI
 
     def self.parse(uri)
       new(*URI.split(uri))
+    end
+
+    private
+
+    def scheme_auth
+      scheme[/.*(?:\+(.+))/, 1]
     end
   end
 

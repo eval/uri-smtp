@@ -172,15 +172,22 @@ RSpec.describe URI::SMTP do
 
       [
         # decoded userinfo with correct key
-        sample("smtps://user%40gmail.com:pass%2F@foo", {
+        sample("smtps+login://user%40gmail.com:pass%2F@foo", {
           user_name: "user@gmail.com",
-          password: "pass/"
+          password: "pass/",
+          tls: true,
+          authentication: "login"
         }),
 
         # local defaults
         sample("smtp://localhost", {
           port: 25,
           __excluding: %i[tls enable_starttls enable_starttls_auto]
+        }),
+        sample("smtps://foo", {
+          port: 465,
+          tls: true,
+          __excluding: %i[enable_starttls enable_starttls_auto]
         }),
         sample("smtps://foo", {
           port: 465,
