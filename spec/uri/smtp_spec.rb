@@ -133,10 +133,11 @@ RSpec.describe URI::SMTP do
           starttls: false,
           tls: false
         }),
-        sample("smtps://foo", {
+        sample("smtps://foo#sender.org", {
           port: 465,
           starttls: false,
-          tls: true
+          tls: true,
+          domain: "sender.org"
         }),
         sample("smtp://foo", {
           port: 587,

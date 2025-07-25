@@ -21,6 +21,7 @@ module URI
       return @port if @port
       return 25 if host_local?
       return 465 if tls?
+
       587
     end
 
@@ -30,11 +31,12 @@ module URI
       return parsed_query["auth"] if parsed_query.has_key?("auth")
       return nil if scheme_auth == "none"
       return scheme_auth if scheme_auth
+
       "plain"
     end
 
     def domain
-      parsed_query["domain"]
+      parsed_query["domain"] || fragment
     end
 
     def starttls
@@ -42,6 +44,7 @@ module URI
       return parsed_query["starttls"] if parsed_query.has_key?("starttls")
       return false if host_local?
       return false if insecure?
+
       :always
     end
     alias_method :starttls?, :starttls
