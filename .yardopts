@@ -1,0 +1,6 @@
+--readme README.md
+--title 'URI::SMTP Documentation'
+--charset utf-8
+--markup markdown
+--markup-provider redcarpet
+'lib/**/*.rb' - '*.md'
