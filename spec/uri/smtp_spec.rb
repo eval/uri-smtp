@@ -106,6 +106,38 @@ RSpec.describe URI::SMTP do
     end
   end
 
+  describe "#decoded_userinfo" do
+    shared_examples "decoded_userinfo of uri" do |uri, format, expected, meta|
+      describe uri.inspect, meta.inspect do
+        specify do
+          expect(parse(uri).decoded_userinfo(format:)).to eql(expected)
+        end
+      end
+    end
+
+    [
+      # string
+      sample("smtp://foo.org", :string, nil),
+      sample("smtp://token@foo.org", :string, "token"),
+      sample("smtp://user%40gmail.com:pass%2F@foo.org", :string, "user@gmail.com:pass/"),
+
+      # array
+      sample("smtp://foo.org", :array, nil),
+      sample("smtp://token@foo.org", :array, ["token", nil]),
+      sample("smtp://:token@foo.org", :array, [nil, "token"]),
+      sample("smtp://user%40gmail.com:pass%2F@foo.org", :array, ["user@gmail.com", "pass/"]),
+
+      # to_h
+      sample("smtp://foo.org", :hash, nil),
+      sample("smtp://token@foo.org", :hash, {user: "token"}),
+      sample("smtp://:token@foo.org", :hash, {password: "token"}),
+      sample("smtp://user%40gmail.com:pass%2F@foo.org", :hash, {user: "user@gmail.com", password: "pass/"})
+
+    ].each do |*args|
+      include_examples "decoded_userinfo of uri", *args
+    end
+  end
+
   describe "#to_h" do
     describe "format: default" do
       shared_examples "hash of uri" do |uri, includes, meta|

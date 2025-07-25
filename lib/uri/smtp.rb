@@ -35,6 +35,42 @@ module URI
       "plain"
     end
 
+    # all formats: return nil when userinfo == nil.
+    #
+    # format: :array
+    # Never contains empty strings (as opposed to [#user, #password]).
+    # Example:
+    # Given #<URI::SMTP smtps://:token@smtp.gmail.com>
+    # Then:
+    # [uri.user, uri.password] #=> ["", "token"]
+    # uri.decoded_userinfo     #=> [nil, "token"]
+    #
+    # format: :hash
+    # Keys are absent when value would be `nil`.
+    # Example:
+    # Given #<URI::SMTP smtps://:token@smtp.gmail.com>
+    # Then:
+    # uri.decoded_userinfo(format: :array) #=> [nil, "token"]
+    # uri.decoded_userinfo(format: :to_h) #=> {password: "token"}
+    def decoded_userinfo(format: :string)
+      return if userinfo.nil?
+
+      case format
+      when :string
+        [decoded_user, decoded_password].compact.join(":")
+      when :array
+        [string_presence(decoded_user), string_presence(decoded_password)]
+      when :hash
+        {
+          user: string_presence(decoded_user),
+          password: string_presence(decoded_password)
+        }.delete_if { |_k, v| v.nil? }
+      else
+        raise ArgumentError,
+          "Unknown format #{format.inspect}. Should be one of #{%i[string array hash].inspect}."
+      end
+    end
+
     def domain
       parsed_query["domain"] || fragment
     end
@@ -124,6 +160,10 @@ module URI
 
     def scheme_auth
       scheme[/.*(?:\+(.+))/, 1]
+    end
+
+    def string_presence(s)
+      s.to_s.strip.then { _1 unless _1.empty? }
     end
   end
 
