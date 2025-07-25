@@ -1,6 +1,25 @@
 # URI::SMTP
 
-This library allows for parsing SMTP-URIs.
+Extends Ruby's `URI` with support for SMTP-uri's.  
+This allows for more concise SMTP-config:
+```diff
+# config/environments/production.rb
+config.action_mailer.delivery_method = :smtp
+- config.action_mailer.smtp_settings = {
+-   address:         "smtp.gmail.com",
+-   port:            587,
+-   domain:          "example.com",
+-   user_name:       Rails.application.credentials.dig(:smtp, :user_name),
+-   password:        Rails.application.credentials.dig(:smtp, :password),
+-   authentication:  "plain",
+-   enable_starttls: true,
+-   open_timeout:    5,
+-   read_timeout:    5
+- }
+# given ENV["SMPT_URL"]:
+# "smtp://user_name:password@smtp.gmail.com?open_timeout=5&read_timeout=5#example.com"
++ config.action_mailer.smtp_settings = URI(ENV.fetch("SMTP_URL")).to_h(format: :am)
+```
 
 ## Installation
 
@@ -21,27 +40,29 @@ gem install uri-smtp
 ### parse
 
 ```ruby
-u = URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org")
+u = URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com#sender.org")
 
 url.scheme           #=> "smtps+login"
 url.auth             #=> "login"
 url.starttls         #=> false
+url.starttls?        #=> false
 url.tls?             #=> true
 url.userinfo         #=> "user%40gmail.com:p%40ss"
+url.decoded_userinfo #=> ["user@gmail.com", "p@ss"]
 url.decoded_user     #=> "user@gmail.com"
 url.user             #=> "user%40gmail.com"
 url.decoded_password #=> "p@ss"
 url.password         #=> "p%40ss"
 url.host             #=> "smtp.gmail.com"
 url.port             #=> 465
-url.domain           #=> s"ender.org"
-url.query            #=> "domain=sender.org"
+url.domain           #=> "sender.org"
 ```
 
 ### to_h
 
 ```ruby
 URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to_h
+#=>
 {auth: "login",
  domain: "sender.org",
  host: "smtp.gmail.com",
@@ -56,6 +77,7 @@ URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to
 Formatting for action_mailer configuration, use `to_h(format: :am)`:
 ```ruby
 URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to_h(format: :am)
+#=>
 {address: "smtp.gmail.com",
  authentication: "login",
  domain: "sender.org",
@@ -89,7 +111,7 @@ There's no official specification for SMTP-URIs. There's some prior work though.
   SMTP with TLS.
 
 > [!NOTE]
-> to get `url.starttls #=> :auto`, provide it in the query: `smtp://foo?auth=auto`. In that case `net-smtp` uses STARTTLS when the server supports it (but won't halt like when using `:always`).
+> to get `url.starttls #=> :auto`, provide it in the query: `smtp://user:pw@foo?auth=auto`. In that case `net-smtp` uses STARTTLS when the server supports it (but won't halt like when using `:always`).
 
 
 ### auth
