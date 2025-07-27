@@ -1,4 +1,4 @@
-# URI::SMTP
+# URI::SMTP [![Gem Version](https://badge.fury.io/rb/uri-smtp.svg)](https://badge.fury.io/rb/uri-smtp) [![API Docs](https://img.shields.io/badge/API%20Docs-YARD-red?style=flat-square&logo=ruby)](https://eval.github.io/uri-smtp/)
 
 Extends Ruby's `URI` with support for SMTP-uri's.  
 This allows for more concise SMTP-config:
