@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+## [0.6.0] - 2025-07-27
+
+- Add: API-docs at https://eval.github.io/uri-smtp/  
+- Fix: "smtp+insecure+foo://..." not considered `#insecure?`  
+- Fix: "smtp://foo.org?auth=none" being ignored  
+- Fix: "smtp+insecure://..." having auth "insecure"  
+- Remove: `#starttls?`  
+
 ## [0.5.0] - 2025-07-25
 
 - Add: `uri#read_timeout`, `uri#open_timeout`  
