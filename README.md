@@ -48,7 +48,7 @@ url.starttls         #=> false
 url.starttls?        #=> false
 url.tls?             #=> true
 url.userinfo         #=> "user%40gmail.com:p%40ss"
-url.decoded_userinfo #=> ["user@gmail.com", "p@ss"]
+url.decoded_userinfo #=> "user@gmail.com:p@ss"
 url.decoded_user     #=> "user@gmail.com"
 url.user             #=> "user%40gmail.com"
 url.decoded_password #=> "p@ss"
@@ -74,7 +74,7 @@ URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to
  password: "p@ss"}
 ```
 
-Formatting for action_mailer configuration, use `to_h(format: :am)`:
+For [ActionMailer configuration](https://guides.rubyonrails.org/action_mailer_basics.html#action-mailer-configuration), use `format: :action_mailer` (or `:am`):
 ```ruby
 URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to_h(format: :am)
 #=>
@@ -86,6 +86,8 @@ URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to
  user_name: "user@gmail.com",
  password: "p@ss"}
 ```
+
+Besides renaming some keys, this also works around a quirk in `v2.8.1` of the mail-gem (e.g. `tls: false` [skips setting up STARTTLS](https://github.com/mikel/mail/blob/2.8.1/lib/mail/network/delivery_methods/smtp.rb#L115)).
 
 
 Full Rails config:
@@ -116,12 +118,12 @@ There's no official specification for SMTP-URIs. There's some prior work though.
 
 ### auth
 
-There's no restriction to the value of auth. Though the following values have special meaning:
+Any value for auth that passes the URI-parser is acceptable. Though the following values have special meaning:
 
 - `none`  
   No authentication is required.
 - `plain`  
-  Authenticate with a username and password using AUTH PLAIN. This is the default behavior.
+  Authenticate with a username and password using AUTH PLAIN. This is the default behavior when no authentication is provided.
 
 > [!NOTE]
 > any query's value for `auth` takes precedence.
