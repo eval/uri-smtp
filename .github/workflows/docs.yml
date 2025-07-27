@@ -2,8 +2,8 @@
 name: Deploy Yard documentation to Pages
 on: # yamllint disable-line rule:truthy
   push:
-    # tags:
-    #   - '*'
+    tags:
+      - '*'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
