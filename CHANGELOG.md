@@ -1,12 +1,24 @@
+Changes can be:
+
+* ✨ Features
+* ⚠️ Breaking
+* 🐛 Bug Fixes
+* 🛠️ Developer
+
 ## [Unreleased]
+
+## [0.7.x] - 2025-07-28
+
+- 🛡️ Push and sign gem via GH Actions (i.e. trusted publisher)  
+  See "Provenance" at https://rubygems.org/gems/uri-smtp
 
 ## [0.6.0] - 2025-07-27
 
-- Add: API-docs at https://eval.github.io/uri-smtp/  
-- Fix: "smtp+insecure+foo://..." not considered `#insecure?`  
-- Fix: "smtp://foo.org?auth=none" being ignored  
-- Fix: "smtp+insecure://..." having auth "insecure"  
-- Remove: `#starttls?`  
+- ✨ API-docs at https://eval.github.io/uri-smtp/  
+- 🐛 "smtp+insecure+foo://..." not considered `#insecure?`  
+- 🐛 "smtp://foo.org?auth=none" being ignored  
+- 🐛 "smtp+insecure://..." having auth "insecure"  
+- ⚠️ remove `#starttls?`  
 
 ## [0.5.0] - 2025-07-25
 
