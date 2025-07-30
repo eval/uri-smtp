@@ -159,6 +159,8 @@ Any value for auth that passes the URI-parser is acceptable. Though the followin
 
 ## Development
 
+[mise](https://mise.jdx.dev/) recommended. This sets the right version of Ruby and adds `bin` to `PATH`.
+
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 Use `bin/yard server --reload` when working on documentation.
 
