@@ -2,10 +2,24 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
-require "uri/smtp"
+load "uri/smtp.rb"
 
 # You can add fixtures and/or initialization code here to make experimenting
 # with your gem easier. You can also use a different console, if you like.
 
+def reload!
+  # prevent 'redefining constant' warnings
+  URI.const_get(:Schemes).send(:remove_const, :SMTP)
+  URI.const_get(:Schemes).send(:remove_const, :SMTPS)
+
+  load File.expand_path(__FILE__)
+end
+
 require "irb"
-IRB.start(__FILE__)
+unless IRB.initialized?
+  puts "Available helper methods: [reload!]"
+
+  # This loads all .irbrc's correctly
+  Dir.chdir(Bundler.root)
+  IRB.start(__FILE__)
+end
