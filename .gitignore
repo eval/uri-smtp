@@ -9,5 +9,7 @@
 # irbrc with overrides
 /_irbrc
 
+Gemfile.lock
+
 # rspec failure tracking
 .rspec_status
