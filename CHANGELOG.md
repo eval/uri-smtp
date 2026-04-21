@@ -7,6 +7,8 @@ Changes can be:
 
 ## [Unreleased]
 
+- 🛡️ MFA required to publish this gem
+
 ## [0.7.x] - 2025-07-28
 
 - 🛡️ Push and sign gem via GH Actions (i.e. trusted publisher)  

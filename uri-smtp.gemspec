@@ -21,6 +21,8 @@ Gem::Specification.new do |spec|
   spec.metadata["changelog_uri"] = "https://github.com/eval/uri-smtp/blob/main/CHANGELOG.md"
   spec.metadata["documentation_uri"] = "https://eval.github.io/uri-smtp/"
 
+  spec.metadata["rubygems_mfa_required"] = "true"
+
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   gemspec = File.basename(__FILE__)
