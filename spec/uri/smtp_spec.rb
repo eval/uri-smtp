@@ -245,5 +245,47 @@ RSpec.describe URI::SMTP do
         include_examples "hash of uri for action_mailer", *args
       end
     end
+
+    describe "user:/password: overrides" do
+      it "injects credentials without uri-escaping" do
+        result = parse("smtps+login://smtp.gmail.com#sender.org")
+          .to_h(format: :am, user: "user@gmail.com", password: "p@ss")
+        expect(result).to include(
+          authentication: "login",
+          user_name: "user@gmail.com",
+          password: "p@ss"
+        )
+      end
+
+      it "resolves auth from the scheme even without userinfo in the URL" do
+        expect(parse("smtps+login://smtp.gmail.com").to_h(format: :am, user: "u", password: "p"))
+          .to include(authentication: "login")
+      end
+
+      it "defaults auth to plain when credentials are given but the URL implies none" do
+        expect(parse("smtps://foo").to_h(user: "u", password: "p"))
+          .to include(auth: "plain", user: "u", password: "p")
+      end
+
+      it "takes precedence over credentials already in the URL" do
+        expect(parse("smtps+login://urluser:urlpass@foo").to_h(user: "override"))
+          .to include(user: "override", password: "urlpass")
+      end
+
+      it "respects an explicit auth=none even when credentials are given" do
+        result = parse("smtps://foo?auth=none").to_h(user: "u", password: "p")
+        expect(result).to_not include(:auth, :user, :password)
+      end
+
+      it "works for the default format too" do
+        expect(parse("smtps+plain://foo").to_h(user: "u", password: "p"))
+          .to include(auth: "plain", user: "u", password: "p")
+      end
+
+      it "leaves output unchanged when no overrides are passed" do
+        uri = "smtps+login://user%40gmail.com:p%40ss@foo"
+        expect(parse(uri).to_h(format: :am)).to eq(parse(uri).to_h(format: :am, user: nil, password: nil))
+      end
+    end
   end
 end

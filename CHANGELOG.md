@@ -7,6 +7,12 @@ Changes can be:
 
 ## [Unreleased]
 
+- ✨ `to_h` accepts `user:`/`password:` overrides
+  provide credentials separately (no uri-escaping) and `auth` still resolves from the scheme, e.g.
+  ```ruby
+  URI("smtps+login://smtp.gmail.com").to_h(format: :am, user: ENV["U"], password: ENV["P"])
+  ```
+
 ## v0.7.3
 
 - 🛡️ MFA required to publish this gem
