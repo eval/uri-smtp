@@ -76,7 +76,7 @@ URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to
 
 For [ActionMailer configuration](https://guides.rubyonrails.org/action_mailer_basics.html#action-mailer-configuration), use `format: :action_mailer` (or `:am`):
 ```ruby
-URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com?domain=sender.org").to_h(format: :am)
+URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com#sender.org").to_h(format: :am)
 #=>
 {address: "smtp.gmail.com",
  authentication: "login",
@@ -92,10 +92,31 @@ Besides renaming some keys, this also works around a quirk in `v2.8.1` of the ma
 
 Full Rails config:
 ```ruby
+    # config/environments/development.rb
     config.action_mailer.delivery_method = :smtp
     # [mailcatcher](https://github.com/sj26/mailcatcher) fallback:
     config.action_mailer.smtp_settings = URI(ENV.fetch("SMTP_URL", "smtp://127.0.0.1:1025")).to_h(format: :am)
 ```
+
+#### Credentials separately
+
+Credentials in the URL must be uri-escaped (e.g. `user@gmail.com` → `user%40gmail.com`), which is easy to get wrong and makes the (env-var) value hard to read. To avoid this, leave them out of the URL and pass them to `to_h` instead:
+
+```ruby
+config.action_mailer.smtp_settings =
+  URI("smtps+login://smtp.gmail.com#sender.org")
+    .to_h(format: :am, user: ENV["SMTP_USERNAME"], password: ENV["SMTP_PASSWORD"])
+#=>
+{address: "smtp.gmail.com",
+ authentication: "login",
+ domain: "sender.org",
+ port: 465,
+ tls: true,
+ user_name: "...",
+ password: "..."}
+```
+
+The URL carries the connection shape; the env-vars carry the secrets. Note `auth` still resolves from the scheme (`+login`) even though the URL has no userinfo, and the overrides take precedence over any credentials in the URL.
 
 ## SMTP-URI
 

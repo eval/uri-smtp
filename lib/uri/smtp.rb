@@ -45,14 +45,7 @@ module URI
     # @return [String] 'auth via scheme' when present, e.g. `"smtp+login://foo.org"`.
     # @return [String] else `"plain"`
     def auth
-      # net-smtp: passing authtype without user/pw raises error
-      return nil unless userinfo
-      return nil if parsed_query["auth"] == "none"
-      return parsed_query["auth"] if parsed_query.has_key?("auth")
-      return nil if scheme_auth == "none"
-      return scheme_auth if scheme_auth
-
-      "plain"
+      auth_for(credentials: !userinfo.nil?)
     end
 
     # Decoded userinfo formatted as String, Array or Hash.
@@ -221,14 +214,32 @@ module URI
     #   # file: config/environments/development.rb
     #   # Config via env-var SMTP_URL or fallback to mailcatcher.
     #   config.action_mailer.smtp_settings = URI(ENV.fetch("SMTP_URL", "http://127.0.0.1:1025")).to_h(format: :am)
+    # @example provide credentials separately
+    #   # Avoids uri-escaping secrets in the URL, and still sets `authentication`
+    #   # from the scheme even though the URL has no userinfo.
+    #   URI("smtps+login://smtp.gmail.com#sender.org").to_h(format: :am, user: "user@gmail.com", password: "p@ss")
+    #   # =>
+    #   # {address: "smtp.gmail.com",
+    #   #  authentication: "login",
+    #   #  domain: "sender.org",
+    #   #  port: 465,
+    #   #  tls: true,
+    #   #  user_name: "user@gmail.com",
+    #   #  password: "p@ss"}
     # @param format [Symbol] the format type, `nil` (default), `:action_mailer`/`:am`.
+    # @param user [String, nil] override the user; takes precedence over any user in the URL. When given, `auth` resolves even without userinfo in the URL.
+    # @param password [String, nil] override the password; takes precedence over any password in the URL.
     # @return [Hash]
-    def to_h(format: nil)
+    def to_h(format: nil, user: nil, password: nil)
+      authentication = auth_for(credentials: !user.nil? || !password.nil? || !userinfo.nil?)
+      user ||= decoded_user
+      password ||= decoded_password
+
       case format
       when :am, :action_mailer
         {
           address: host,
-          authentication: auth,
+          authentication:,
           domain:,
           enable_starttls: starttls == :always,
           enable_starttls_auto: starttls == :auto,
@@ -238,8 +249,8 @@ module URI
           tls:
         }.tap do
           unless _1[:authentication].nil?
-            _1[:user_name] = decoded_user
-            _1[:password] = decoded_password
+            _1[:user_name] = user
+            _1[:password] = password
           end
           # mail 2.8.1 logic is faulty in that it shortcuts
           # (start)tls-settings when they are false.
@@ -252,7 +263,7 @@ module URI
         end.delete_if { |_k, v| v.nil? }
       else
         {
-          auth:,
+          auth: authentication,
           domain:,
           host:,
           open_timeout:,
@@ -263,8 +274,8 @@ module URI
           tls:
         }.tap do
           unless _1[:auth].nil?
-            _1[:user] = decoded_user
-            _1[:password] = decoded_password
+            _1[:user] = user
+            _1[:password] = password
           end
         end.delete_if { |_k, v| v.nil? }
       end
@@ -280,6 +291,19 @@ module URI
     end
 
     private
+
+    # Resolve the authentication mechanism given whether credentials are
+    # available — either from `userinfo` in the URL or from `#to_h` overrides.
+    # net-smtp: passing authtype without user/pw raises an error, hence the guard.
+    def auth_for(credentials:)
+      return nil unless credentials
+      return nil if parsed_query["auth"] == "none"
+      return parsed_query["auth"] if parsed_query.has_key?("auth")
+      return nil if scheme_auth == "none"
+      return scheme_auth if scheme_auth
+
+      "plain"
+    end
 
     def scheme_auth
       string_absense_in(scheme.split("+").last, %w[smtp smtps insecure])
