@@ -7,6 +7,8 @@ Changes can be:
 
 ## [Unreleased]
 
+## v0.7.3
+
 - 🛡️ MFA required to publish this gem
 
 ## [0.7.x] - 2025-07-28
