@@ -164,7 +164,28 @@ Any value for auth that passes the URI-parser is acceptable. Though the followin
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 Use `bin/yard server --reload` when working on documentation.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `bin/rake install`.
+
+### Releasing
+
+The gem is published automatically by GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) when a `v*` tag is pushed: CI builds the gem, publishes it to [rubygems.org](https://rubygems.org) as a [trusted publisher](https://guides.rubygems.org/trusted-publishing/) (with build provenance), and creates the GitHub release. **The gem is never pushed from your machine**, and CI never writes back to the repo.
+
+To cut a release:
+
+1. Bump the version:
+   ```sh
+   bin/rake 'gem:write_version[0.7.3]'
+   ```
+   This rewrites `lib/uri/smtp/version.rb` and updates `Gemfile.lock`.
+2. Finalize `CHANGELOG.md` (rename `## [Unreleased]` to the new version + date).
+3. Commit and push, then confirm CI is green.
+4. Build, tag and push:
+   ```sh
+   bin/rake release
+   ```
+   This builds the gem locally (verifying it builds), creates the `v0.7.3` tag, and pushes it to `origin` — which triggers the release workflow. Pushing to rubygems is disabled via `gem_push=no` (set in `mise.toml`); outside mise, run `gem_push=no bin/rake release`.
+
+Tags use a `v` prefix; a fourth version segment (e.g. `v0.7.3.rc1`) is published as a pre-release.
 
 ## Contributing
 
