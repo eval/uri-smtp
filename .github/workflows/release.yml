@@ -80,7 +80,7 @@ jobs:
           Address SMTP-servers as URI.
 
           **Rubygems**: https://rubygems.org/gems/uri-smtp/versions/${version}
-          **Changelog**: https://github.com/eval/uri-smtp/blob/main/CHANGELOG.md#${version//./}
+          **Changelog**: https://github.com/eval/uri-smtp/blob/main/CHANGELOG.md#v${version//./}
           EOF
 
           if [[ "$dot_count" -gt 2 ]]; then
