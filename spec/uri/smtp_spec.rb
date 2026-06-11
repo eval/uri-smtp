@@ -52,6 +52,37 @@ RSpec.describe URI::SMTP do
     end
   end
 
+  describe "#tls_verify" do
+    shared_examples "tls_verify of uri" do |uri, expected, meta|
+      describe uri.inspect, meta.inspect do
+        specify do
+          expect(parse(uri).tls_verify).to eql(expected)
+        end
+      end
+    end
+
+    [
+      sample("smtps://foo", true),
+      sample("smtps+insecure://foo", false),
+      sample("smtps+insecure+login://user:pw@foo", false),
+      # `insecure` only relaxes verification under TLS; plaintext has no cert to verify
+      sample("smtp+insecure://foo", true),
+      sample("smtp://foo", true)
+    ].each do |*args|
+      include_examples "tls_verify of uri", *args
+    end
+  end
+
+  describe "#insecure?" do
+    it "is true for the TLS variant" do
+      expect(parse("smtps+insecure://foo")).to be_insecure
+    end
+
+    it "is false for plain smtps" do
+      expect(parse("smtps://foo")).to_not be_insecure
+    end
+  end
+
   describe "#auth" do
     shared_examples "auth of uri" do |uri, expected, meta|
       describe uri.inspect, meta.inspect do
@@ -176,6 +207,12 @@ RSpec.describe URI::SMTP do
           port: 587,
           starttls: :always,
           tls: false
+        }),
+
+        # TLS without certificate verification
+        sample("smtps+insecure://foo", {
+          tls: true,
+          tls_verify: false
         })
       ].each do |*args|
         include_examples "hash of uri", *args
@@ -183,6 +220,11 @@ RSpec.describe URI::SMTP do
 
       it "doesn't include userinfo when no auth" do
         expect(parse("smtp+none://u:p@foo").to_h).to_not include(:user, :password)
+      end
+
+      it "omits tls_verify unless skipping verification" do
+        expect(parse("smtps://foo").to_h).to_not include(:tls_verify)
+        expect(parse("smtp+insecure://foo").to_h).to_not include(:tls_verify)
       end
     end
     describe "format: :action_mailer" do
@@ -232,6 +274,15 @@ RSpec.describe URI::SMTP do
           port: 587,
           enable_starttls: true,
           __excluding: %i[tls enable_starttls_auto]
+        }),
+        # TLS without certificate verification
+        sample("smtps+insecure://foo", {
+          tls: true,
+          openssl_verify_mode: "none"
+        }),
+        sample("smtps://foo", {
+          tls: true,
+          __excluding: %i[openssl_verify_mode]
         }),
         # timeout settings
         sample("smtp://foo?read_timeout=&open_timeout=", {

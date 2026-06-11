@@ -7,22 +7,25 @@ Changes can be:
 
 ## [Unreleased]
 
+- ✨ `smtps+insecure://`  
+  TLS, skipping certificate verification.
+  Adds `#tls_verify`; `to_h` emits `tls_verify: false` (default format) / `openssl_verify_mode: "none"` (`:am` format).
 - ✨ `to_h` accepts `user:`/`password:` overrides
   provide credentials separately (no uri-escaping) and `auth` still resolves from the scheme, e.g.
   ```ruby
   URI("smtps+login://smtp.gmail.com").to_h(format: :am, user: ENV["U"], password: ENV["P"])
   ```
 
-## v0.7.3
+## [v0.7.3](https://github.com/eval/uri-smtp/releases/tag/v0.7.3)
 
 - 🛡️ MFA required to publish this gem
 
-## [0.7.x] - 2025-07-28
+## [v0.7.2](https://github.com/eval/uri-smtp/releases/tag/v0.7.2)
 
 - 🛡️ Push and sign gem via GH Actions (i.e. trusted publisher)  
   See "Provenance" at https://rubygems.org/gems/uri-smtp
 
-## [0.6.0] - 2025-07-27
+## [v0.6.0](https://github.com/eval/uri-smtp/releases/tag/v0.6.0)
 
 - ✨ API-docs at https://eval.github.io/uri-smtp/  
 - 🐛 "smtp+insecure+foo://..." not considered `#insecure?`  
@@ -30,7 +33,7 @@ Changes can be:
 - 🐛 "smtp+insecure://..." having auth "insecure"  
 - ⚠️ remove `#starttls?`  
 
-## [0.5.0] - 2025-07-25
+## [v0.5.0](https://github.com/eval/uri-smtp/releases/tag/v0.5.0)
 
 - Add: `uri#read_timeout`, `uri#open_timeout`  
   Coerced integers from query:
@@ -47,15 +50,15 @@ Changes can be:
   NOTE Any domain from the query takes precedence.
 - Fix: "smtps+foo://..." having no tls
 
-## [0.4.0] - 2025-07-23
+## [v0.4.0](https://github.com/eval/uri-smtp/releases/tag/v0.4.0)
 
 - FIX: correct settings for action_mailer using mail v2.8.1
 
-## [0.3.0] - 2025-07-23
+## [v0.3.0](https://github.com/eval/uri-smtp/releases/tag/v0.3.0)
 
 - FIX: Kernel.URI should accept URI's
 
-## [0.2.0] - 2025-07-18
+## [v0.2.0](https://github.com/eval/uri-smtp/releases/tag/v0.2.0)
 
 - Feature complete
 

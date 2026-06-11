@@ -132,6 +132,8 @@ There's no official specification for SMTP-URIs. There's some prior work though.
   SMTP without STARTTLS (i.e. `url.starttls #=> false`)..
 - `smtps`  
   SMTP with TLS.
+- `smtps+insecure`  
+  SMTP with TLS, skipping certificate verification (i.e. `url.tls_verify #=> false`).
 
 > [!NOTE]
 > to get `url.starttls #=> :auto`, provide it in the query: `smtp://user:pw@foo?auth=auto`. In that case `net-smtp` uses STARTTLS when the server supports it (but won't halt like when using `:always`).
@@ -162,6 +164,7 @@ Any value for auth that passes the URI-parser is acceptable. Though the followin
 | `smtp+login://user:pass@mail.example.com` | ❌ | 587 | ⚡ | login | STARTTLS `:always` with LOGIN auth |
 | `smtp+none://mail.example.com` | ❌ | 587 | 🔄 | none | Explicit no authentication |
 | `smtps://mail.example.com` | ✅ | 465 | ❌ | none | Direct TLS connection |
+| `smtps+insecure://mail.example.com` | ✅ | 465 | ❌ | none | Direct TLS, skipping certificate verification |
 | `smtps://mail.example.com?domain=sender.org&read_timeout=5&open_timeout=5` | ✅ | 465 | ❌ | none | `domain`, `read_timeout` and `open_timeout` set |
 | `smtps+login://user@imap.gmail.com` | ✅ | 465 | ❌ | login | Direct TLS with LOGIN auth |
 | `smtps://user%40gmail.com:p%40ss@imap.gmail.com` | ✅ | 465 | ❌ | login | Direct TLS with encoded userinfo `user@gmail.com:p@ss` |
