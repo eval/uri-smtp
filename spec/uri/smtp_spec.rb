@@ -205,6 +205,11 @@ RSpec.describe URI::SMTP do
       end
 
       [
+        # no auth, means no user or password
+        sample("smtp://user:pass@foo.org?auth=false", {
+          __excluding: %i[user_name password]
+        }),
+
         # decoded userinfo with correct key
         sample("smtps+login://user%40gmail.com:pass%2F@foo", {
           user_name: "user@gmail.com",
@@ -243,6 +248,36 @@ RSpec.describe URI::SMTP do
         })
       ].each do |*args|
         include_examples "hash of uri for action_mailer", *args
+      end
+    end
+
+    describe "format: :net_smtp_start_kwargs" do
+      shared_examples "hash of uri for net_smtp_start_kwargs" do |uri, includes, meta|
+        describe uri.inspect, meta.inspect do
+          excluded_keys = includes.delete(:__excluding)
+          specify do
+            expect(parse(uri).to_h(format: :net_smtp_start_kwargs)).to include(includes)
+          end
+          if excluded_keys&.any?
+            specify do
+              expect(parse(uri).to_h(format: :net_smtp_start_kwargs).keys).to_not include(excluded_keys)
+            end
+          end
+
+          specify do
+            expect(parse(uri).to_h.values).to_not include(nil)
+          end
+        end
+      end
+
+      [
+        # no auth, no user or password
+        sample("smtp://user:pass@foo.org?auth=false", {
+          authtype: nil,
+          __excluding: %i[user_name password]
+        }),
+      ].each do |*args|
+        include_examples "hash of uri for net_smtp_start_kwargs", *args
       end
     end
   end

@@ -7,6 +7,37 @@ require_relative "smtp/version"
 module URI
   # Class that adds smtp(s)-scheme to the standard URI-module.
   class SMTP < URI::Generic
+    module Extensions
+      module Uri
+        module ClassMethods
+          def parse(uri)
+            # Ensure 'plus schemes' (e.g., `smtp+login://`, `smtp+oauth://`) are parsed as URI::SMTP
+            # instead of URI::Generic objects.
+            if uri.is_a?(String) && uri.start_with?("smtp")
+              return ::URI::SMTP.parse(uri)
+            end
+
+            super
+          end
+        end
+      end
+
+      module NetSmtp
+        module ClassMethods
+          def start(address_or_uri, _port = nil, **kwargs, &block)
+            if address_or_uri.is_a?(URI)
+              super(address_or_uri.host,
+                    address_or_uri.port,
+                    **kwargs.merge(address_or_uri.to_h(format: :net_smtp_start_kwargs)),
+                    &block)
+            else
+              super
+            end
+          end
+        end
+      end
+    end
+
     class Error < StandardError; end
 
     # @return [Integer]
@@ -47,7 +78,6 @@ module URI
     def auth
       # net-smtp: passing authtype without user/pw raises error
       return nil unless userinfo
-      return nil if parsed_query["auth"] == "none"
       return parsed_query["auth"] if parsed_query.has_key?("auth")
       return nil if scheme_auth == "none"
       return scheme_auth if scheme_auth
@@ -171,7 +201,7 @@ module URI
       %w[127.0.0.1 localhost].include?(host)
     end
 
-    # `query` as Hash with values `starttls`, `read_timeout` and `open_timeout` coerced.
+    # `query` as Hash with values `starttls`, `auth`, `read_timeout` and `open_timeout` coerced.
     # @return [Hash] `query` parsed.
     def parsed_query
       @parsed_query ||= URI.decode_www_form(query.to_s).to_h
@@ -184,6 +214,12 @@ module URI
           when "false" then false
           else
             :always
+          end
+
+          _1["auth"] &&= case _1["auth"]
+          when "none", "false" then nil
+          else
+            _1["auth"]
           end
         end
     end
@@ -217,6 +253,15 @@ module URI
     #   #  tls: true,
     #   #  user_name: "user@gmail.com",
     #   #  password: "p@ss"}
+    # @example format `:net_smtp_start_kwargs`, Net::SMTP.start(...) configuration
+    #   URI("smtps+login://user%40gmail.com:p%40ss@smtp.gmail.com#sender.org").to_h(format: :net_smtp_start_kwargs)
+    #   # =>
+    #   # {authtype: "login",
+    #   #  helo: "sender.org",
+    #   #  starttls: false,
+    #   #  tls: true,
+    #   #  user: "user@gmail.com",
+    #   #  password: "p@ss" }
     # @example Rails configuration
     #   # file: config/environments/development.rb
     #   # Config via env-var SMTP_URL or fallback to mailcatcher.
@@ -237,7 +282,7 @@ module URI
           read_timeout:,
           tls:
         }.tap do
-          unless _1[:authentication].nil?
+          if auth
             _1[:user_name] = decoded_user
             _1[:password] = decoded_password
           end
@@ -250,6 +295,19 @@ module URI
           _1.delete(:enable_starttls_auto) unless _1[:enable_starttls_auto]
           _1.delete(:enable_starttls_auto) if _1[:tls]
         end.delete_if { |_k, v| v.nil? }
+      when :net_smtp_start_kwargs
+        {
+          authtype: auth,
+          helo: domain,
+          starttls:,
+          tls:,
+          }.tap do
+            if auth
+              # nil values don't pass [Net::SMTP::Authenticator.check_args](https://github.com/ruby/net-smtp/blob/a0075eb8a74910bd05566f0a208589263bce7597/lib/net/smtp/authenticator.rb#L18)
+              _1[:user] = decoded_user.to_s
+              _1[:password] = decoded_password.to_s
+            end
+          end
       else
         {
           auth:,
@@ -303,16 +361,8 @@ module URI
   register_scheme "SMTPS", SMTP
 end
 
-module UriSmtpExtensions
-  def parse(uri)
-    # Ensure 'plus schemes' (e.g., `smtp+login://`, `smtp+oauth://`) are parsed as URI::SMTP
-    # instead of URI::Generic objects.
-    if uri.is_a?(String) && uri.start_with?("smtp")
-      return URI::SMTP.parse(uri)
-    end
+URI.singleton_class.prepend(URI::SMTP::Extensions::Uri::ClassMethods)
 
-    super
-  end
+if defined?(Net::SMTP)
+  Net::SMTP.singleton_class.prepend(URI::SMTP::Extensions::NetSmtp::ClassMethods)
 end
-
-URI.singleton_class.prepend(UriSmtpExtensions)

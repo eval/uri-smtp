@@ -16,3 +16,5 @@ gem "yard"
 gem "webrick" # `bin/yard server` needs this
 
 gem "redcarpet", "~> 3.6"
+
+gem "net-smtp"

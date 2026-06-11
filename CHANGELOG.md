@@ -4,6 +4,7 @@ Changes can be:
 * ⚠️ Breaking
 * 🐛 Bug Fixes
 * 🛠️ Developer
+* 🛡️ Security
 
 ## [Unreleased]
 
