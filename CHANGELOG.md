@@ -7,6 +7,8 @@ Changes can be:
 
 ## [Unreleased]
 
+## [v0.7.4](https://github.com/eval/uri-smtp/releases/tag/v0.7.4)
+
 - ✨ `smtps+insecure://`  
   TLS, skipping certificate verification.
   Adds `#tls_verify`; `to_h` emits `tls_verify: false` (default format) / `openssl_verify_mode: "none"` (`:am` format).

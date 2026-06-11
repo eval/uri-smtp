@@ -4,6 +4,6 @@ require "uri"
 
 module URI
   class SMTP < URI::Generic
-    VERSION = "0.7.4"
+    VERSION = "0.7.5.dev"
   end
 end
