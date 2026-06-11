@@ -135,20 +135,41 @@ module URI
     end
     alias_method :tls?, :tls
 
-    # Whether or not the scheme indicates to skip STARTTLS.
+    # Whether or not the scheme carries the `insecure` modifier.
+    #
+    # `insecure` relaxes the transport's security: with plaintext `smtp` it skips
+    # `STARTTLS` (see {#starttls}); with `smtps` it skips TLS certificate
+    # verification (see {#tls_verify}).
     #
     # @see #starttls
+    # @see #tls_verify
     #
     # @example
     #   URI("smtp+insecure://foo.org").insecure? #=> true
-    #   # This is equivalent (though shorter and more descriptive) to
+    #   # `smtp+insecure` is equivalent (though shorter and more descriptive) to
     #   URI("smtp://foo.org?starttls=false")
+    #
+    #   # TLS without certificate verification
+    #   URI("smtps+insecure://foo.org").insecure? #=> true
     #
     #   # combine with authentication
     #   URI("smtp+insecure+login://user:pw@foo.org").insecure? #=> true
-    # @return [Boolean] whether `scheme` starts with `"smtp+insecure"`.
+    # @return [Boolean] whether `scheme` includes the `insecure` modifier.
     def insecure?
-      scheme.start_with?("smtp+insecure")
+      scheme.split("+").include?("insecure")
+    end
+
+    # Whether or not to verify the server's TLS certificate.
+    #
+    # @see #insecure?
+    #
+    # @example
+    #   URI("smtps://foo.org").tls_verify          #=> true
+    #   URI("smtps+insecure://foo.org").tls_verify #=> false
+    # @return [false] when the scheme combines TLS with `insecure`, e.g. `smtps+insecure://`.
+    # @return [true] otherwise.
+    def tls_verify
+      !(tls? && insecure?)
     end
 
     # Whether or not `host` is considered local.
@@ -244,6 +265,7 @@ module URI
           enable_starttls: starttls == :always,
           enable_starttls_auto: starttls == :auto,
           open_timeout:,
+          openssl_verify_mode: ("none" unless tls_verify),
           port:,
           read_timeout:,
           tls:
@@ -271,7 +293,8 @@ module URI
           read_timeout:,
           scheme:,
           starttls:,
-          tls:
+          tls:,
+          tls_verify: (false unless tls_verify)
         }.tap do
           unless _1[:auth].nil?
             _1[:user] = user
